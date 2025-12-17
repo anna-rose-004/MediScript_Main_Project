@@ -29,9 +29,8 @@ export default function Login() {
   
       const { token, role } = data;
       console.log("Received role:", role);
-  
-      // Store JWT in localStorage for future API requests
-      localStorage.setItem("token", token);
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("role", data.role);
   
       // Navigate based on user role
       if (role.toLowerCase() === "doctor") navigate("/dashboard");

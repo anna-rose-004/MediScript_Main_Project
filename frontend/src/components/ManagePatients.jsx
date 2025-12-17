@@ -1,23 +1,38 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import Navbar from "./Navbar";
 
 export default function ManagePatients() {
+  const navigate = useNavigate();
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Load patients
+  // Fetch patients (ADMIN / AUTHORIZED USER)
   useEffect(() => {
     const fetchPatients = async () => {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        alert("Unauthorized. Please login again.");
+        navigate("/login");
+        return;
+      }
+
       try {
         const res = await fetch(
-          `${import.meta.env.VITE_BACKEND_URL}/api/patients`,
-          { credentials: "include" }
+          `${import.meta.env.VITE_BACKEND_URL}/patients`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
 
         const data = await res.json();
 
-        if (!res.ok || !data.patients) {
+        if (!res.ok) {
+          console.error("Failed fetching patients:", data);
           setPatients([]);
         } else {
           setPatients(data.patients);
@@ -30,18 +45,28 @@ export default function ManagePatients() {
     };
 
     fetchPatients();
-  }, []);
+  }, [navigate]);
 
   // Delete patient
-  const deletePatient = async (id) => {
+  const deletePatient = async (patientId) => {
     if (!window.confirm("Delete this patient?")) return;
+
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      alert("Unauthorized. Please login again.");
+      navigate("/login");
+      return;
+    }
 
     try {
       const res = await fetch(
-        `${import.meta.env.VITE_BACKEND_URL}/api/patients/${id}`,
+        `${import.meta.env.VITE_BACKEND_URL}/patients/${patientId}`,
         {
           method: "DELETE",
-          credentials: "include",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
 
@@ -53,9 +78,12 @@ export default function ManagePatients() {
       }
 
       alert("Patient deleted successfully");
-      setPatients((prev) => prev.filter((p) => p.id !== id));
+      setPatients((prev) =>
+        prev.filter((p) => p.patient_id !== patientId)
+      );
     } catch (err) {
       console.error("Delete error:", err);
+      alert("Failed to delete patient.");
     }
   };
 
@@ -86,20 +114,30 @@ export default function ManagePatients() {
               <tbody>
                 {patients.length === 0 ? (
                   <tr>
-                    <td colSpan="4" className="text-center p-4 text-gray-600">
+                    <td
+                      colSpan="4"
+                      className="text-center p-4 text-gray-600"
+                    >
                       No patients found.
                     </td>
                   </tr>
                 ) : (
                   patients.map((p) => (
-                    <tr key={p.id} className="border-t hover:bg-gray-50">
+                    <tr
+                      key={p.patient_id}
+                      className="border-t hover:bg-gray-50"
+                    >
                       <td className="p-3 text-blue-900">{p.name}</td>
                       <td className="p-3 text-blue-900">{p.age}</td>
-                      <td className="p-3 text-blue-900">{p.user_id}</td>
+                      <td className="p-3 text-blue-900">
+                        {p.patient_id}
+                      </td>
 
                       <td className="p-3">
                         <button
-                          onClick={() => deletePatient(p.id)}
+                          onClick={() =>
+                            deletePatient(p.patient_id)
+                          }
                           className="bg-red-600 text-white px-3 py-1 rounded"
                         >
                           Delete

@@ -8,19 +8,31 @@ export default function ManageDoctors() {
   const [doctors, setDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Fetch doctors from backend (Supabase-powered)
+  // Fetch doctors (ADMIN ONLY)
   useEffect(() => {
     const fetchDoctors = async () => {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        alert("Unauthorized. Please login again.");
+        navigate("/login");
+        return;
+      }
+
       try {
         const res = await fetch(
           `${import.meta.env.VITE_BACKEND_URL}/doctors`,
-          { credentials: "include" }
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
 
         const data = await res.json();
 
-        if (!res.ok || !data.doctors) {
-          console.error("Failed fetching doctors");
+        if (!res.ok) {
+          console.error("Failed fetching doctors:", data);
           setDoctors([]);
         } else {
           setDoctors(data.doctors);
@@ -33,18 +45,28 @@ export default function ManageDoctors() {
     };
 
     fetchDoctors();
-  }, []);
+  }, [navigate]);
 
   // Delete doctor
   const handleDeleteDoctor = async (doctorId) => {
     if (!window.confirm("Are you sure you want to delete this doctor?")) return;
+
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      alert("Unauthorized. Please login again.");
+      navigate("/login");
+      return;
+    }
 
     try {
       const res = await fetch(
         `${import.meta.env.VITE_BACKEND_URL}/doctors/${doctorId}`,
         {
           method: "DELETE",
-          credentials: "include",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
 
@@ -74,7 +96,9 @@ export default function ManageDoctors() {
         <div className="p-6">
           {/* Header */}
           <div className="flex justify-between items-center mb-6">
-            <h1 className="text-3xl font-bold text-blue-900">Manage Doctors</h1>
+            <h1 className="text-3xl font-bold text-blue-900">
+              Manage Doctors
+            </h1>
 
             <button
               onClick={() => navigate("/add-doctor")}
@@ -100,15 +124,25 @@ export default function ManageDoctors() {
               <tbody>
                 {doctors.length === 0 ? (
                   <tr>
-                    <td colSpan="5" className="text-center p-4 text-gray-600">
+                    <td
+                      colSpan="5"
+                      className="text-center p-4 text-gray-600"
+                    >
                       No doctors found
                     </td>
                   </tr>
                 ) : (
                   doctors.map((doc) => (
-                    <tr key={doc.id} className="border-t hover:bg-gray-50">
-                      <td className="p-3 text-blue-900">{doc.user_id}</td>
-                      <td className="p-3 text-blue-900">{doc.name}</td>
+                    <tr
+                      key={doc.id}
+                      className="border-t hover:bg-gray-50"
+                    >
+                      <td className="p-3 text-blue-900">
+                        {doc.user_id}
+                      </td>
+                      <td className="p-3 text-blue-900">
+                        {doc.name}
+                      </td>
                       <td className="p-3 text-blue-900">
                         {doc.specialization || "General"}
                       </td>
@@ -118,7 +152,9 @@ export default function ManageDoctors() {
 
                       <td className="p-3 text-center space-x-2">
                         <button
-                          onClick={() => navigate(`/doctor-profile/${doc.id}`)}
+                          onClick={() =>
+                            navigate(`/doctor-profile/${doc.id}`)
+                          }
                           className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded"
                         >
                           View
