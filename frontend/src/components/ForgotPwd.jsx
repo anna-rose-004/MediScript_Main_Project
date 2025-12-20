@@ -13,7 +13,7 @@ export default function ForgotPwd() {
 const handleSendOtp = async (e) => {
   e.preventDefault();
   try {
-    const res = await axios.post("http://localhost:5000/forgot-password", { email });
+    const res = await axios.post("http://localhost:5000/auth/forgot-password", { email });
     console.log("Response:", res.data);
     setMessage("OTP sent to your email!"); // show message
     setStep(2); // move to OTP input page
@@ -35,7 +35,7 @@ const handleSendOtp = async (e) => {
 const handleVerifyOtp = async (e) => {
   e.preventDefault();
   try {
-    const res = await axios.post("http://localhost:5000/verify-otp", { email, otp });
+    const res = await axios.post("http://localhost:5000/auth/verify-otp", { email, otp });
     console.log("OTP verified:", res.data);
     setMessage("OTP Verified!");
     setStep(3); // move to reset password page
@@ -49,7 +49,7 @@ const handleVerifyOtp = async (e) => {
 const handleResetPassword = async (e) => {
   e.preventDefault();
   try {
-    const res = await axios.post("http://localhost:5000/reset-password", { email, new_password:newPassword });
+    const res = await axios.post("http://localhost:5000/auth/reset-password", { email, new_password:newPassword });
     console.log("Password reset:", res.data);
     setMessage("Password reset successfully!");
     setStep(4); // move to success page

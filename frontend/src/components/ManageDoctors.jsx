@@ -48,42 +48,43 @@ export default function ManageDoctors() {
   }, [navigate]);
 
   // Delete doctor
-  const handleDeleteDoctor = async (doctorId) => {
-    if (!window.confirm("Are you sure you want to delete this doctor?")) return;
+const handleDeleteDoctor = async (doctorUserId) => {
+  if (!window.confirm("Are you sure you want to delete this doctor?")) return;
 
-    const token = localStorage.getItem("token");
+  const token = localStorage.getItem("token");
+  if (!token) {
+    alert("Unauthorized. Please login again.");
+    navigate("/login");
+    return;
+  }
 
-    if (!token) {
-      alert("Unauthorized. Please login again.");
-      navigate("/login");
+  try {
+    const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/doctors/${doctorUserId}`, {
+  method: "DELETE",
+  headers: { Authorization: `Bearer ${token}` },
+});
+
+    let data;
+    const contentType = res.headers.get("content-type");
+    if (contentType && contentType.includes("application/json")) {
+      data = await res.json();
+    } else {
+      data = { error: `Unexpected server response (${res.status})` };
+    }
+
+    if (!res.ok) {
+      alert("Error deleting doctor: " + (data.error || "Unknown error"));
       return;
     }
 
-    try {
-      const res = await fetch(
-        `${import.meta.env.VITE_BACKEND_URL}/doctors/${doctorId}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+    alert("Doctor deleted successfully");
+    setDoctors((prev) => prev.filter((d) => d.user_id !== doctorUserId));
+  } catch (err) {
+    console.error("Delete doctor error:", err);
+    alert("Failed to delete doctor.");
+  }
+};
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        alert("Error deleting doctor: " + (data.error || "Unknown error"));
-        return;
-      }
-
-      alert("Doctor deleted successfully");
-      setDoctors((prev) => prev.filter((d) => d.id !== doctorId));
-    } catch (err) {
-      console.error("Delete doctor error:", err);
-      alert("Failed to delete doctor.");
-    }
-  };
 
   if (loading) return <div className="p-6">Loading doctors...</div>;
 
@@ -124,44 +125,28 @@ export default function ManageDoctors() {
               <tbody>
                 {doctors.length === 0 ? (
                   <tr>
-                    <td
-                      colSpan="5"
-                      className="text-center p-4 text-gray-600"
-                    >
+                    <td colSpan="5" className="text-center p-4 text-gray-600">
                       No doctors found
                     </td>
                   </tr>
                 ) : (
                   doctors.map((doc) => (
-                    <tr
-                      key={doc.id}
-                      className="border-t hover:bg-gray-50"
-                    >
-                      <td className="p-3 text-blue-900">
-                        {doc.user_id}
-                      </td>
-                      <td className="p-3 text-blue-900">
-                        {doc.name}
-                      </td>
-                      <td className="p-3 text-blue-900">
-                        {doc.specialization || "General"}
-                      </td>
-                      <td className="p-3 text-blue-900">
-                        {doc.license_number || "-"}
-                      </td>
+                    <tr key={doc.user_id} className="border-t hover:bg-gray-50">
+                      <td className="p-3 text-blue-900">{doc.user_id}</td>
+                      <td className="p-3 text-blue-900">{doc.name}</td>
+                      <td className="p-3 text-blue-900">{doc.specialization || "General"}</td>
+                      <td className="p-3 text-blue-900">{doc.license_number || "-"}</td>
 
                       <td className="p-3 text-center space-x-2">
                         <button
-                          onClick={() =>
-                            navigate(`/doctor-profile/${doc.id}`)
-                          }
+                          onClick={() => navigate(`/doctor-profile/${doc.user_id}`)}
                           className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded"
                         >
                           View
                         </button>
 
                         <button
-                          onClick={() => handleDeleteDoctor(doc.id)}
+                          onClick={() => handleDeleteDoctor(doc.user_id)}
                           className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded"
                         >
                           Delete

@@ -24,32 +24,39 @@ export default function AddDoctor() {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
+  e.preventDefault();
 
-    try {
-      // Example API endpoint, adjust to your backend
-      const res = await fetch("http://localhost:5000/add-doctor", {
+  const token = localStorage.getItem("token");
+
+
+  try {
+    console.log("POST /doctors/add HIT");
+    const res = await fetch(
+      `${import.meta.env.VITE_BACKEND_URL}/doctors/add`,
+      {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify(formData),
-      });
-
-      const data = await res.json();
-      if (data.error) {
-        setError(data.error);
-      } else {
-        alert("Doctor added successfully ✅");
-        navigate("/manage-doctors");
       }
-    } catch (err) {
-      console.error("Error adding doctor:", err);
-      setError("Failed to add doctor. Please try again.");
-    } finally {
-      setLoading(false);
+    );
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert(data.message || data.error);
+      return;
     }
-  };
+
+    alert("Doctor added successfully");
+    navigate("/manage-doctors");
+  } catch (err) {
+    console.error("Error adding doctor:", err);
+  }
+};
+
 
   return (
     <div className="flex">
