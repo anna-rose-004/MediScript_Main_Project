@@ -90,7 +90,6 @@ router.post("/add", authMiddleware, isAdmin, async (req, res) => {
       return res.status(409).json({ error: "Email already exists" });
     }
 
-    // 3️⃣ Generate next sequential doctor user_id (D0007, D0008, ...)
     const { data: lastDoctor, error: idError } = await supabase
       .from("users")
       .select("user_id")
@@ -113,10 +112,8 @@ router.post("/add", authMiddleware, isAdmin, async (req, res) => {
 
     const user_id = `D${String(nextNumber).padStart(4, "0")}`;
 
-    // 4️⃣ Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 5️⃣ Insert doctor
     const { data, error } = await supabase
       .from("users")
       .insert([
@@ -137,8 +134,7 @@ router.post("/add", authMiddleware, isAdmin, async (req, res) => {
       console.error("Insert error:", error);
       return res.status(500).json({ error: error.message });
     }
-
-    // 6️⃣ Success response
+    
     return res.status(201).json({
       message: "Doctor added successfully",
       doctor: data[0],
@@ -152,6 +148,7 @@ router.post("/add", authMiddleware, isAdmin, async (req, res) => {
 // DELETE /doctors/:user_id
 router.delete("/:user_id", authMiddleware, isAdmin, async (req, res) => {
   const doctorId = req.params.user_id;
+
   console.log("DELETE route hit, user_id:", req.params.user_id);
 
   if (!doctorId) {

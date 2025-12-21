@@ -5,9 +5,11 @@ import { useNavigate, useLocation } from 'react-router-dom';
 export default function ConsultationCompletion() {
   const navigate = useNavigate();
   const location = useLocation();
+  const token = localStorage.getItem("token");
+
 
   // get passed items from listening page
-  const { transcript, summary, doctor, patient } = location.state || {};
+  const { convo_id, convo_number, transcript, summary, doctor, patient } = location.state || {};
 
   if (!doctor || !patient) {
     return (
@@ -58,19 +60,78 @@ const [editableTranscript, setEditableTranscript] = useState(transcript || "");
     setPrescribedMedicines(prescribedMedicines.filter(m => m.id !== id));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setSaving(true);
+  const handleSubmit = async (e) => {
+  e.preventDefault();
+  setSaving(true);
+
+  try {
+    /* ===============================
+       1️⃣ SAVE CLINICAL SUMMARY
+    =============================== */
+    const summaryRes = await fetch(
+      "http://localhost:5000/clinical-summaries",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          convo_id,
+          subjective: editableSummary,
+          objective: editableSummary,
+          assessment: editableSummary,
+          plan: editableSummary,
+        }),
+      }
+    );
+
+    if (!summaryRes.ok) {
+      throw new Error("Failed to save clinical summary");
+    }
+
+    const summaryData = await summaryRes.json();
+    const summary_id = summaryData.summary_id;
+
+    /* ===============================
+       2️⃣ SAVE ENCRYPTED DIAGNOSIS
+    =============================== */
+    const diagnosisRes = await fetch(
+      "http://localhost:5000/diagnosis",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          summary_id,
+          diagnosis: formData.diagnosis,
+        }),
+      }
+    );
+
+    if (!diagnosisRes.ok) {
+      throw new Error("Failed to save diagnosis");
+    }
+
+    /* ===============================
+       3️⃣ SUCCESS FLOW
+    =============================== */
+    setSaving(false);
+    setShowSuccess(true);
 
     setTimeout(() => {
-      setSaving(false);
-      setShowSuccess(true);
+      navigate("/dashboard");
+    }, 2000);
 
-      setTimeout(() => {
-        navigate("/dashboard");
-      }, 2000);
-    }, 1000);
-  };
+  } catch (error) {
+    console.error("CONSULTATION SAVE ERROR:", error);
+    setSaving(false);
+    alert("Failed to save consultation data");
+  }
+};
+
 
   return (
     <div className="min-h-screen bg-white">
@@ -114,6 +175,7 @@ const [editableTranscript, setEditableTranscript] = useState(transcript || "");
             </h2>
             <p>ID: {patient.patient_id}</p>
             <p>Name: {patient.name}</p>
+            <p>Consultation #: {convo_number}</p>
             <p>Blood Group: {patient.blood_group}</p>
             <p>Allergies: {patient.allergies?.join(", ") || "None"}</p>
           </div>

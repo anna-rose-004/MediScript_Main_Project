@@ -42,8 +42,54 @@ export default function ListeningPage() {
   }
 };
 
+const saveConversationAndNavigate = async () => {
+  const token = localStorage.getItem("token");
 
-  const goToConsultation = () => {
+  // 1️⃣ Create conversation
+  const convoRes = await fetch("http://localhost:5000/conversations", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      patient_id: patient.patient_id,
+    }),
+  });
+
+  const convoData = await convoRes.json();
+  const { convo_id, convo_number } = convoData;
+
+  // 2️⃣ Save transcript
+  await fetch("http://localhost:5000/transcripts", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      convo_id,
+      text: transcript,
+      confidence: 0.95,
+    }),
+  });
+
+  // 3️⃣ Navigate to completion page
+  navigate("/consultation", {
+    state: {
+      convo_id,
+      convo_number,
+      transcript,
+      summary,
+      doctor,
+      patient,
+    },
+  });
+};
+
+
+
+  /*const goToConsultation = () => {
   navigate("/consultation", {
     state: {
       transcript,
@@ -52,7 +98,7 @@ export default function ListeningPage() {
       patient
     }
   });
-};
+};*/
 
 
 
@@ -115,11 +161,17 @@ export default function ListeningPage() {
         {transcript.trim().length > 0 && (
           <div className="mt-6 flex justify-end">
             <button
-              onClick={goToConsultation}
-              className="px-4 py-2 bg-[#2563eb] text-white rounded-lg"
+              onClick={saveConversationAndNavigate}
+              disabled={!summary || loading}
+              className={`px-4 py-2 rounded-lg ${
+                !summary
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-[#2563eb] text-white"
+              }`}
             >
               Go to Consultation
             </button>
+
           </div>
         )}
 

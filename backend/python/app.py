@@ -16,6 +16,7 @@ def summarize():
     # Handle CORS preflight
     if request.method == "OPTIONS":
         return jsonify({"status": "ok"}), 200
+    print("Summarization request received")
 
     try:
         data = request.get_json()
