@@ -28,7 +28,6 @@ export default function AddDoctor() {
 
   const token = localStorage.getItem("token");
 
-
   try {
     console.log("POST /doctors/add HIT");
     const res = await fetch(
@@ -51,6 +50,14 @@ export default function AddDoctor() {
     }
 
     alert("Doctor added successfully");
+
+    // ✅ Log the action to audit_log
+    /*await logActivity("ADD_DOCTOR", {
+      doctorId: data.doctor.user_id,
+      doctorName: data.doctor.name,
+      specialization: data.doctor.specialization,
+    });*/
+
     navigate("/manage-doctors");
   } catch (err) {
     console.error("Error adding doctor:", err);

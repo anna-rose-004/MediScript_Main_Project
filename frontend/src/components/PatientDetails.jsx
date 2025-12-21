@@ -14,6 +14,8 @@ export default function PatientDetails() {
   const displayGender = patient?.gender || "N/A";
   const displayContact = patient?.contact || "N/A";
 
+
+
   const startListening = () => {
     navigate("/listening", {
       state: {
