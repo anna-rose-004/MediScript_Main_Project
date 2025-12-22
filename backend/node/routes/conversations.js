@@ -5,9 +5,6 @@ import authMiddleware from "../middleware/authMiddleware.js";
 const router = express.Router();
 console.log(" conversations.js route file LOADED");
 
-/* ============================================================================
-   CREATE CONVERSATION
-============================================================================ */
 router.post("/", authMiddleware, async (req, res) => {
   try {
     const { patient_id } = req.body;

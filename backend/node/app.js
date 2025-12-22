@@ -8,8 +8,8 @@ import conversationsRoutes from "./routes/conversations.js";
 import diagnosisRoutes from "./routes/diagnosis.js";
 import transcriptsRoutes from "./routes/transcripts.js";
 import clinicalRoutes from "./routes/clinicalSummaries.js";
-//import auditRouter from "./routes/audit.js";
-//import { authMiddleware } from "./middleware/authMiddleware.js"; 
+
+import auditRoutes from "./routes/audit.js";
 
 const app = express();
 
@@ -24,6 +24,7 @@ app.options("*", cors());
 app.use(express.json());
 
 app.use("/auth", authRoutes);
+app.use("/audit", auditRoutes);
 
 //app.use(authMiddleware);
 app.use("/doctors", doctorRoutes);
