@@ -6,27 +6,130 @@ import PrescriptionForm from "./PrescriptionForm";
 export default function ConsultationCompletion() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { summary, doctor, patient } = location.state || {};
+  const token = localStorage.getItem("token");
+  const { convo_id, convo_number, transcript, summary, doctor, patient } = location.state || {};
+
+  if (!doctor || !patient) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-red-500">
+        Missing doctor or patient data.
+      </div>
+    );
+  }
 
   const [editableSummary, setEditableSummary] = useState(summary || "");
   const [diagnosis, setDiagnosis] = useState("");
-  const [prescribedMedicines, setPrescribedMedicines] = useState([]);
   const [saving, setSaving] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setSaving(true);
+  const [formData, setFormData] = useState({
+    diagnosis: "",
+    additionalNotes: ""
+  });
 
-    // You can save summary, diagnosis, prescribedMedicines to backend here
-    console.log("Prescription data:", prescribedMedicines);
+  const [prescribedMedicines, setPrescribedMedicines] = useState([
+    {
+      id: Date.now(),
+      medicine_id: "",
+      dosage: "",
+      frequency: "",
+      duration: "",
+      quantity: 1,
+      instructions: ""
+    }
+  ]);
+
+  const handleAddMedicine = () => {
+    setPrescribedMedicines([
+      ...prescribedMedicines,
+      {
+        id: Date.now(),
+        medicine_id: "",
+        dosage: "",
+        frequency: "",
+        duration: "",
+        quantity: 1,
+        instructions: ""
+      }
+    ]);
+  };
+
+  const handleRemove = (id) => {
+    setPrescribedMedicines(prescribedMedicines.filter(m => m.id !== id));
+  };
+
+
+  const handleSubmit = async (e) => {
+  e.preventDefault();
+  setSaving(true);
+
+  try {
+    /* ===============================
+       1️⃣ SAVE CLINICAL SUMMARY
+    =============================== */
+    const summaryRes = await fetch(
+      "http://localhost:5000/clinical-summaries",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          convo_id,
+          subjective: editableSummary,
+          objective: editableSummary,
+          assessment: editableSummary,
+          plan: editableSummary,
+        }),
+      }
+    );
+
+    if (!summaryRes.ok) {
+      throw new Error("Failed to save clinical summary");
+    }
+
+    const summaryData = await summaryRes.json();
+    const summary_id = summaryData.summary_id;
+
+    /* ===============================
+       2️⃣ SAVE ENCRYPTED DIAGNOSIS
+    =============================== */
+    const diagnosisRes = await fetch(
+      "http://localhost:5000/diagnosis",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          summary_id,
+          diagnosis: formData.diagnosis,
+        }),
+      }
+    );
+
+    if (!diagnosisRes.ok) {
+      throw new Error("Failed to save diagnosis");
+    }
+
+    /* ===============================
+       3️⃣ SUCCESS FLOW
+    =============================== */
+    setSaving(false);
+    setShowSuccess(true);
 
     setTimeout(() => {
-      setSaving(false);
-      setShowSuccess(true);
-      setTimeout(() => navigate("/dashboard"), 2000);
-    }, 1000);
-  };
+      navigate("/dashboard");
+    }, 2000);
+
+  } catch (error) {
+    console.error("CONSULTATION SAVE ERROR:", error);
+    setSaving(false);
+    alert("Failed to save consultation data");
+  }
+};
 
   return (
     <div className="min-h-screen bg-gray-50">
