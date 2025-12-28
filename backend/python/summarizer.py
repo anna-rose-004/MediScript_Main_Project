@@ -9,20 +9,99 @@ def summarize_to_crt(text):
     
     # Define symptom keywords with proper display names
     symptom_keywords = {
-        "fever": "Fever",
-        "headache": "Headache",
-        "body pain": "Body pain",
-        "sore throat": "Sore throat",
-        "nausea": "Nausea",
-        "vomiting": "Vomiting",
-        "diarrhea": "Diarrhea",
-        "cough": "Cough",
-        "breathing difficulty": "Breathing difficulty",
-        "chest pain": "Chest pain",
-        "fatigue": "Fatigue",
-        "cold": "Cold symptoms"
+    # Constitutional
+    "fever": "Fever",
+    "chills": "Chills",
+    "rigors": "Rigors",
+    "fatigue": "Fatigue",
+    "weakness": "Generalized weakness",
+    "weight loss": "Weight loss",
+    "loss of appetite": "Loss of appetite",
+    "night sweats": "Night sweats",
+
+    # Pain-related
+    "headache": "Headache",
+    "body pain": "Body pain",
+    "muscle pain": "Myalgia",
+    "joint pain": "Arthralgia",
+    "back pain": "Back pain",
+    "abdominal pain": "Abdominal pain",
+    "chest pain": "Chest pain",
+    "epigastric pain": "Epigastric pain",
+
+    # Respiratory
+    "cough": "Cough",
+    "dry cough": "Dry cough",
+    "productive cough": "Productive cough",
+    "shortness of breath": "Shortness of breath",
+    "breathing difficulty": "Breathing difficulty",
+    "wheezing": "Wheezing",
+    "chest tightness": "Chest tightness",
+    "hemoptysis": "Coughing blood",
+    "runny nose": "Rhinorrhea",
+    "nasal congestion": "Nasal congestion",
+    "sore throat": "Sore throat",
+    "hoarseness": "Hoarseness of voice",
+
+    # Cardiovascular
+    "palpitations": "Palpitations",
+    "dizziness": "Dizziness",
+    "syncope": "Syncope",
+    "leg swelling": "Pedal edema",
+    "orthopnea": "Orthopnea",
+    "paroxysmal nocturnal dyspnea": "PND",
+
+    # Gastrointestinal
+    "nausea": "Nausea",
+    "vomiting": "Vomiting",
+    "diarrhea": "Diarrhea",
+    "constipation": "Constipation",
+    "bloating": "Abdominal bloating",
+    "heartburn": "Heartburn",
+    "acid reflux": "Acid reflux",
+    "blood in stool": "Hematochezia",
+    "black stools": "Melena",
+    "jaundice": "Jaundice",
+
+    # Neurological
+    "seizure": "Seizure",
+    "loss of consciousness": "Loss of consciousness",
+    "confusion": "Confusion",
+    "memory loss": "Memory impairment",
+    "tingling": "Paresthesia",
+    "numbness": "Numbness",
+    "slurred speech": "Slurred speech",
+    "weakness on one side": "Focal neurological deficit",
+
+    # Genitourinary
+    "burning urination": "Dysuria",
+    "increased urination": "Frequency of urination",
+    "urgency": "Urinary urgency",
+    "blood in urine": "Hematuria",
+    "flank pain": "Flank pain",
+    "reduced urine output": "Oliguria",
+
+    # Endocrine / Metabolic
+    "increased thirst": "Polydipsia",
+    "increased hunger": "Polyphagia",
+    "frequent urination": "Polyuria",
+    "heat intolerance": "Heat intolerance",
+    "cold intolerance": "Cold intolerance",
+
+    # Dermatological
+    "rash": "Skin rash",
+    "itching": "Pruritus",
+    "skin lesions": "Skin lesions",
+    "ulcers": "Ulcers",
+    "discoloration": "Skin discoloration",
+
+    # Psychiatric
+    "anxiety": "Anxiety",
+    "depression": "Depressive symptoms",
+    "sleep disturbance": "Sleep disturbance",
+    "irritability": "Irritability"
     }
-    
+   
     symptoms_present = []
     symptoms_absent = []
     
@@ -59,13 +138,26 @@ def summarize_to_crt(text):
     
     # Extract Past Medical History
     chronic_conditions = {
-        "diabetes": "Diabetes",
-        "asthma": "Asthma",
+        "diabetes": "Diabetes mellitus",
         "hypertension": "Hypertension",
+        "blood pressure": "Hypertension",
+        "asthma": "Bronchial asthma",
+        "copd": "Chronic obstructive pulmonary disease",
+        "heart disease": "Ischemic heart disease",
+        "coronary artery disease": "Coronary artery disease",
+        "heart failure": "Heart failure",
+        "stroke": "Cerebrovascular disease",
         "thyroid": "Thyroid disorder",
-        "heart": "Cardiac condition",
-        "blood pressure": "Hypertension"
+        "kidney disease": "Chronic kidney disease",
+        "liver disease": "Chronic liver disease",
+        "epilepsy": "Epilepsy",
+        "tuberculosis": "Tuberculosis",
+        "cancer": "Malignancy",
+        "arthritis": "Arthritis",
+        "autoimmune": "Autoimmune disorder",
+        "hiv": "HIV infection"
     }
+
     
     pmh = []
     for condition_key, condition_name in chronic_conditions.items():
@@ -79,7 +171,30 @@ def summarize_to_crt(text):
     
     # Extract medication
     medications = []
-    common_meds = ["paracetamol", "acetaminophen", "ibuprofen", "aspirin", "antibiotic", "amoxicillin"]
+    common_meds = [
+        # Analgesics / Antipyretics
+        "paracetamol", "acetaminophen", "ibuprofen", "diclofenac", "aspirin",
+
+        # Antibiotics
+        "amoxicillin", "azithromycin", "ceftriaxone", "ciprofloxacin",
+        "doxycycline", "metronidazole",
+
+        # Respiratory
+        "salbutamol", "budesonide", "montelukast",
+
+        # GI
+        "pantoprazole", "omeprazole", "ranitidine", "ondansetron",
+
+        # Cardiovascular
+        "amlodipine", "atenolol", "metoprolol", "losartan",
+
+        # Endocrine
+        "insulin", "metformin", "levothyroxine",
+
+        # Others
+        "steroids", "antihistamine", "antipyretic"
+    ]
+
     for med in common_meds:
         if med in t:
             medications.append(med.capitalize())
@@ -106,14 +221,24 @@ def summarize_to_crt(text):
     # Extract Doctor's Assessment/Impression
     impression = "Likely viral infection"
     assessment_keywords = {
-        "flu": "Seasonal influenza / Viral infection",
         "viral infection": "Viral infection",
+        "flu": "Influenza-like illness",
         "bacterial infection": "Bacterial infection",
         "covid": "COVID-19",
-        "cold": "Common cold",
+        "common cold": "Upper respiratory tract infection",
         "pneumonia": "Pneumonia",
-        "bronchitis": "Bronchitis"
+        "bronchitis": "Acute bronchitis",
+        "uti": "Urinary tract infection",
+        "gastritis": "Gastritis",
+        "gastroenteritis": "Acute gastroenteritis",
+        "hypertension": "Uncontrolled hypertension",
+        "diabetes": "Poor glycemic control",
+        "asthma exacerbation": "Asthma exacerbation",
+        "copd exacerbation": "COPD exacerbation",
+        "sepsis": "Sepsis (rule out)",
+        "dehydration": "Dehydration"
     }
+
     
     for keyword, disease in assessment_keywords.items():
         if keyword in t:
@@ -170,41 +295,3 @@ def summarize_to_crt(text):
 """
     
     return summary
-
-
-
-# Example usage
-if __name__ == "__main__":
-    
-    text = """
-    Doctor: Hello, what brings you in today?
-Patient: Doctor, I’ve been having fever and a bad headache for the last three days.
-Doctor: Is the fever continuous or does it come and go?
-Patient: It comes and goes, mostly worse at night.
-Doctor: Do you have any other symptoms like cough, sore throat, or body pain?
-Patient: Yes, I have mild body pain and a little bit of sore throat.
-Doctor: Any nausea, vomiting, or diarrhea?
-Patient: No vomiting or diarrhea, just a slight nausea yesterday.
-Doctor: Have you taken any medicines so far?
-Patient: I took paracetamol twice a day.
-It helps for a few hours.
-Doctor: Any history of similar illness in the past?
-Patient: I got something similar last year during monsoon.
-Doctor: Did you travel anywhere recently or come in contact with anyone sick?
-Patient: No travel, but my colleague had a fever last week.
-Doctor: Understood.
-Are you experiencing any breathing difficulty or chest pain?
-Patient: No, none of that.
-Doctor: Do you have any chronic illnesses like diabetes, asthma, or hypertension?
-Patient: No, I am generally healthy.
-Doctor: Good.
-I’ll check your temperature and throat.
-It looks like a viral infection, possibly seasonal flu.
-Patient: Is it serious, doctor?
-Doctor: Not at all.
-You should be fine with rest and medication.
-Patient: Okay, thank you.
-Doctor: I’ll prescribe some medicines and advise proper hydration and rest.
-
-    """
-    print(summarize_to_crt(text))
