@@ -10,6 +10,7 @@ import transcriptsRoutes from "./routes/transcripts.js";
 import clinicalRoutes from "./routes/clinicalSummaries.js";
 //import auditRouter from "./routes/audit.js";
 //import { authMiddleware } from "./middleware/authMiddleware.js"; 
+import prescriptionRoutes from "./routes/prescriptions.js";
 
 const app = express();
 
@@ -32,6 +33,7 @@ app.use("/conversations",conversationsRoutes);
 app.use("/transcripts", transcriptsRoutes);
 app.use("/clinical-summaries", clinicalRoutes);
 app.use("/diagnosis", diagnosisRoutes);
+app.use("/prescriptions", prescriptionRoutes);
 //app.use("/audit-log", auditRouter);
 
 export default app;

@@ -1,3 +1,4 @@
+//DIAGNOSIS AND MEDICINES ROUTES
 import express from "express";
 import { supabase } from "../services/supabaseClient.js";
 import authMiddleware from "../middleware/authMiddleware.js";
@@ -7,7 +8,7 @@ const router = express.Router();
 
 router.post("/", authMiddleware, async (req, res) => {
   try {
-    if (req.user.role !== "Doctor") {
+    if (req.user.role.toLowerCase() !== "doctor") {
       return res.status(403).json({ error: "Access denied" });
     }
 
@@ -38,6 +39,51 @@ router.post("/", authMiddleware, async (req, res) => {
   } catch (err) {
     console.error("SAVE DIAGNOSIS ERROR:", err);
     return res.status(500).json({ error: "Server error" });
+  }
+});
+
+
+//search medicines
+router.get("/search", authMiddleware, async (req, res) => {
+  try {
+    const { query } = req.query;
+
+    if (!query) {
+      return res.status(400).json({ error: "Search query required" });
+    }
+
+    // 1️⃣ Check availability anywhere
+    const { data: available, error: availError } = await supabase
+      .rpc("check_medicine_availability", { search_name: query });
+
+    if (availError) throw availError;
+
+    if (available.length > 0) {
+      return res.json({
+        available: true,
+        medicines: available
+      });
+    }
+
+    // 2️⃣ Find alternatives using composition
+    const { data: alternatives, error: altError } = await supabase
+      .from("medicine")
+      .select("medicine_id, name, composition_1, composition_2")
+      .or(
+        `composition_1.ilike.%${query}%,composition_2.ilike.%${query}%`
+      )
+      .limit(5);
+
+    if (altError) throw altError;
+
+    return res.json({
+      available: false,
+      alternatives
+    });
+
+  } catch (err) {
+    console.error("MEDICINE SEARCH ERROR:", err);
+    res.status(500).json({ error: "Server error" });
   }
 });
 

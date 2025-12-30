@@ -24,7 +24,6 @@ router.post("/", authMiddleware, async (req, res) => {
           objective,
           assessment,
           plan,
-          created_by: req.user.id,
         },
       ])
       .select()

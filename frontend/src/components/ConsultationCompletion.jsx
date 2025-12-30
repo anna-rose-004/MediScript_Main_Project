@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { ArrowLeft, Save, Pill, Plus, Trash2, User, FileText, CheckCircle } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import PrescriptionPreview from "../components/PrescriptionPreview";
+
 
 export default function ConsultationCompletion() {
   const navigate = useNavigate();
   const location = useLocation();
   const token = localStorage.getItem("token");
-
-
   // get passed items from listening page
   const { convo_id, convo_number, transcript, summary, doctor, patient } = location.state || {};
 
@@ -19,24 +19,54 @@ export default function ConsultationCompletion() {
     );
   }
 
-const [editableTranscript, setEditableTranscript] = useState(transcript || "");
   const [editableSummary, setEditableSummary] = useState(summary || "");
   const [showSuccess, setShowSuccess] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
 
   const [formData, setFormData] = useState({
     diagnosis: "",
     additionalNotes: ""
   });
+  const [searchResults, setSearchResults] = useState({});
+  const [searchLoading, setSearchLoading] = useState(false);
+
+  const searchMedicine = async (query, rowId) => {
+    const currentMed = prescribedMedicines.find(m => m.id === rowId);
+    if (!query || query.length < 2 || currentMed?.medicine_id) return;
+    setSearchLoading(true);
+
+    try {
+      const res = await fetch(
+        `http://localhost:5000/diagnosis/search?query=${query}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+      if (!res.ok) {
+      throw new Error("Search API failed");
+      }
+
+      const data = await res.json();
+
+      setSearchResults(prev => ({
+        ...prev,
+        [rowId]: data
+      }));
+
+    } catch (err) {
+      console.error("MEDICINE SEARCH ERROR:", err);
+    } finally {
+      setSearchLoading(false);
+    }
+  };
 
   const [prescribedMedicines, setPrescribedMedicines] = useState([
     {
-      id: Date.now(),
-      medicine_id: "",
-      dosage: "",
-      frequency: "",
-      duration: "",
-      quantity: 1,
+      id: Date.now(),medicine_id: "",name: "",dosage: "",frequency: "",duration: "",quantity: 1,
+      availability_status: "unknown",
       instructions: ""
     }
   ]);
@@ -47,6 +77,7 @@ const [editableTranscript, setEditableTranscript] = useState(transcript || "");
       {
         id: Date.now(),
         medicine_id: "",
+        name: "",
         dosage: "",
         frequency: "",
         duration: "",
@@ -60,77 +91,120 @@ const [editableTranscript, setEditableTranscript] = useState(transcript || "");
     setPrescribedMedicines(prescribedMedicines.filter(m => m.id !== id));
   };
 
-  const handleSubmit = async (e) => {
-  e.preventDefault();
-  setSaving(true);
+  const prescriptionData = {
+  date: new Date().toLocaleDateString(),
 
-  try {
-    /* ===============================
-       1️⃣ SAVE CLINICAL SUMMARY
-    =============================== */
-    const summaryRes = await fetch(
-      "http://localhost:5000/clinical-summaries",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          convo_id,
-          subjective: editableSummary,
-          objective: editableSummary,
-          assessment: editableSummary,
-          plan: editableSummary,
-        }),
-      }
-    );
+  doctor: {
+    name: doctor.name,
+    specialization: doctor.specialization,
+    license: doctor.license_number
+  },
 
-    if (!summaryRes.ok) {
-      throw new Error("Failed to save clinical summary");
-    }
+  patient: {
+    id: patient.patient_id,
+    name: patient.name,
+    age: patient.age
+  },
 
-    const summaryData = await summaryRes.json();
-    const summary_id = summaryData.summary_id;
-
-    /* ===============================
-       2️⃣ SAVE ENCRYPTED DIAGNOSIS
-    =============================== */
-    const diagnosisRes = await fetch(
-      "http://localhost:5000/diagnosis",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          summary_id,
-          diagnosis: formData.diagnosis,
-        }),
-      }
-    );
-
-    if (!diagnosisRes.ok) {
-      throw new Error("Failed to save diagnosis");
-    }
-
-    /* ===============================
-       3️⃣ SUCCESS FLOW
-    =============================== */
-    setSaving(false);
-    setShowSuccess(true);
-
-    setTimeout(() => {
-      navigate("/dashboard");
-    }, 2000);
-
-  } catch (error) {
-    console.error("CONSULTATION SAVE ERROR:", error);
-    setSaving(false);
-    alert("Failed to save consultation data");
-  }
+  medicines: prescribedMedicines.map(m => ({
+    name: m.name,
+    dosage: m.dosage,
+    frequency: m.frequency,
+    duration: m.duration,
+    quantity: m.quantity
+  }))
 };
+
+
+    const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+
+    try {
+      const summaryRes = await fetch(
+        "http://localhost:5000/clinical-summaries",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            convo_id,
+            subjective: editableSummary,
+            objective: editableSummary,
+            assessment: editableSummary,
+            plan: editableSummary,
+          }),
+        }
+      );
+
+      if (!summaryRes.ok) {
+        throw new Error("Failed to save clinical summary");
+      }
+
+      const summaryData = await summaryRes.json();
+      const summary_id = summaryData.summary_id;
+
+      const diagnosisRes = await fetch(
+        "http://localhost:5000/diagnosis",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            summary_id,
+            diagnosis: formData.diagnosis,
+          }),
+        }
+      );
+
+      if (!diagnosisRes.ok) {
+        throw new Error("Failed to save diagnosis");
+      }
+
+      const prescriptionRes = await fetch("http://localhost:5000/prescriptions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          doctor_id: doctor.user_id,
+          patient_id: patient.patient_id,
+          medicines: prescribedMedicines
+        })
+      });
+      if (!prescriptionRes.ok) {
+        throw new Error("Failed to save prescription");
+      }
+
+      console.log("Submitting payload:", {
+    diagnosis: formData.diagnosis,
+    summary: editableSummary,
+    medicines: prescribedMedicines,
+    patient_id: patient.patient_id,
+    doctor_id: doctor.user_id,
+    conversation_number: convo_number
+  });
+
+      setSaving(false);
+      setShowSuccess(true);
+      setShowPreview(true);
+      console.log("SETTING PREVIEW TRUE");
+
+      /*setTimeout(() => {
+        navigate("/dashboard");
+      }, 2000);*/
+
+    } catch (error) {
+      console.error("CONSULTATION SAVE ERROR:", error);
+      setSaving(false);
+      alert("Failed to save consultation data");
+    }
+  };
 
 
   return (
@@ -245,19 +319,111 @@ const [editableTranscript, setEditableTranscript] = useState(transcript || "");
 
                   <input
                     type="text"
-                    placeholder="Medicine Name"
-                    value={med.medicine_id}
-                    onChange={(e) =>
-                      setPrescribedMedicines(
-                        prescribedMedicines.map(x =>
-                          x.id === med.id ? { ...x, medicine_id: e.target.value } : x
-                        )
-                      )
-                    }
+                    placeholder="Search medicine"
+                    value={med.name || ""}
+                    onChange={(e) => {
+                        const value = e.target.value;
+
+                        setPrescribedMedicines(
+                          prescribedMedicines.map(x =>
+                            x.id === med.id ? { ...x, name: value, medicine_id: "" } : x
+                          )
+                        );
+                        if (value.length < 2) {
+                          setSearchResults(prev => {
+                            const copy = { ...prev };
+                            delete copy[med.id];
+                            return copy;
+                          });
+                          return;
+                        }
+
+                        searchMedicine(value, med.id);
+                      }}
                     className="border p-2 rounded"
                     required
                   />
 
+                  {med.name.length >= 2 && searchResults[med.id] && (
+                    <div className="mt-2 border rounded p-2 bg-white text-sm max-h-40 overflow-y-auto">
+
+                      {searchResults[med.id].available ? (
+                        <>
+                          <p className="text-green-600 font-semibold">
+                            Available in hospital
+                          </p>
+
+                          {Array.isArray(searchResults[med.id]?.medicines) &&
+                            searchResults[med.id].medicines.map(m => (
+                            <button
+                              key={m.medicine_id}
+                              type="button"
+                              className="block w-full text-left px-2 py-1 hover:bg-blue-50"
+                              onClick={() => {
+                                setPrescribedMedicines(
+                                  prescribedMedicines.map(x =>
+                                    x.id === med.id
+                                      ? {
+                                          ...x,
+                                          medicine_id: m.medicine_id,
+                                          name: m.name,
+                                          availability_status: "available"
+                                        }
+                                      : x
+                                  )
+                                );
+                                setSearchResults(prev => {
+                                    const copy = { ...prev };
+                                    delete copy[med.id];
+                                    return copy;
+                                  });
+                              }}
+                            >
+                              {m.name}
+                            </button>
+                          ))}
+                        </>
+                      ) : (
+                        <>
+                          <p className="text-red-600 font-semibold">
+                            Not available. Alternatives:
+                          </p>
+
+                          {Array.isArray(searchResults[med.id]?.alternatives) &&
+                            searchResults[med.id].alternatives.map(a => (
+
+                            <button
+                              key={a.medicine_id}
+                              type="button"
+                              className="block w-full text-left px-2 py-1 hover:bg-yellow-50"
+                              onClick={() => {
+                                setPrescribedMedicines(
+                                  prescribedMedicines.map(x =>
+                                    x.id === med.id
+                                      ? {
+                                          ...x,
+                                          medicine_id: a.medicine_id,
+                                          name: a.name,
+                                          availability_status: "substituted"
+                                        }
+                                      : x
+                                  )
+                                );
+                                setSearchResults(prev => {
+                                  const copy = { ...prev };
+                                  delete copy[med.id];
+                                  return copy;
+                                });
+                              }}
+                            >
+                              {a.name}
+                            </button>
+                          ))}
+                        </>
+                      )}
+
+                    </div>
+                  )}
                   <input
                     type="text"
                     placeholder="Dosage"
@@ -272,6 +438,67 @@ const [editableTranscript, setEditableTranscript] = useState(transcript || "");
                     className="border p-2 rounded"
                     required
                   />
+                  <select
+                    value={med.frequency}
+                    onChange={(e) =>
+                      setPrescribedMedicines(
+                        prescribedMedicines.map(x =>
+                          x.id === med.id ? { ...x, frequency: e.target.value } : x
+                        )
+                      )
+                    }
+                    className="border p-2 rounded"
+                    required
+                  >
+                    <option value="">Select Frequency</option>
+                    <option value="1-0-0">Morning (1-0-0)</option>
+                    <option value="0-1-0">Afternoon (0-1-0)</option>
+                    <option value="0-0-1">Night (0-0-1)</option>
+                    <option value="1-0-1">Morning & Night (1-0-1)</option>
+                    <option value="0-1-1">Afternoon & Night (0-1-1)</option>
+                    <option value="1-1-1">Morning, Afternoon & Night (1-1-1)</option>
+                  </select>
+                  
+                  <select
+                    value={med.duration}
+                    onChange={(e) =>
+                      setPrescribedMedicines(
+                        prescribedMedicines.map(x =>
+                          x.id === med.id ? { ...x, duration: e.target.value } : x
+                        )
+                      )
+                    }
+                    className="border p-2 rounded"
+                    required
+                  >
+                    <option value="">Select Duration</option>
+                    <option value="3 days">3 days</option>
+                    <option value="5 days">5 days</option>
+                    <option value="7 days">7 days</option>
+                    <option value="10 days">10 days</option>
+                    <option value="14 days">14 days</option>
+                    <option value="30 days">30 days</option>
+                  </select>
+
+                  <select
+                    value={med.quantity}
+                    onChange={(e) =>
+                      setPrescribedMedicines(
+                        prescribedMedicines.map(x =>
+                          x.id === med.id ? { ...x, quantity: Number(e.target.value) } : x
+                        )
+                      )
+                    }
+                    className="border p-2 rounded"
+                    required
+                  >
+                    <option value="">Qty</option>
+                    {[...Array(30)].map((_, i) => (
+                      <option key={i + 1} value={i + 1}>
+                        {i + 1}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
             ))}
@@ -292,7 +519,30 @@ const [editableTranscript, setEditableTranscript] = useState(transcript || "");
           </div>
 
         </form>
+          {/* Prescription Preview */}
+          {showPreview && (
+            <div className="mt-10">
 
+              <PrescriptionPreview data={prescriptionData} />
+
+              <div className="flex justify-end mt-4 space-x-3">
+                <button
+                  onClick={() => window.print()}
+                  className="px-5 py-2 bg-green-600 text-white rounded"
+                >
+                  Print Prescription
+                </button>
+
+                <button
+                  onClick={() => navigate("/dashboard")}
+                  className="px-5 py-2 bg-blue-600 text-white rounded"
+                >
+                  Back to Dashboard
+                </button>
+              </div>
+
+            </div>
+          )}
       </main>
 
     </div>
