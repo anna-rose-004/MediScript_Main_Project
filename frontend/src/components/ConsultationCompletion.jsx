@@ -46,7 +46,7 @@ export default function ConsultationCompletion() {
         }
       );
       if (!res.ok) {
-      throw new Error("Search API failed");
+       throw new Error("Search API failed");
       }
 
       const data = await res.json();
@@ -112,7 +112,7 @@ export default function ConsultationCompletion() {
     frequency: m.frequency,
     duration: m.duration,
     quantity: m.quantity
-  }))
+  }))     
 };
 
 
