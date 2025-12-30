@@ -20,7 +20,6 @@ export function encryptDiagnosis(text) {
   });
 }
 
-/* Decrypt diagnosis */
 export function decryptDiagnosis(encryptedText) {
   const data = JSON.parse(encryptedText);
 

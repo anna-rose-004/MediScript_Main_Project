@@ -32,7 +32,7 @@ export default function ListeningPage() {
       throw new Error(data.error || "Summarization failed");
     }
 
-    setSummary(data.summary);   // ✅ STORE SUMMARY
+    setSummary(data.summary);   
 
   } catch (err) {
     console.error(err);

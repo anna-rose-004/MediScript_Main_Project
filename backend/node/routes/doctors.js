@@ -192,6 +192,35 @@ router.delete("/:user_id", authMiddleware, isAdmin, async (req, res) => {
   }
 });
 
+/* ============================================================================
+   GET DASHBOARD STATS (ADMIN ONLY)
+============================================================================ */
+router.get("/dashboard-stats", authMiddleware, isAdmin, async (req, res) => {
+  try {
+    const [doctors, patients, medicine] = await Promise.all([
+      supabase
+        .from("users")
+        .select("id", { count: "exact", head: true })
+        .eq("role", "doctor"),
 
+      supabase
+        .from("patients")
+        .select("*", { count: "exact", head: true }),
+
+      supabase
+        .from("medicine")
+        .select("*", { count: "exact", head: true }),
+    ]);
+
+    return res.json({
+      doctors: doctors.count ?? 0,
+      patients: patients.count ?? 0,
+      medicines: medicine.count ?? 0,
+    });
+  } catch (err) {
+    console.error("DASHBOARD STATS ERROR:", err);
+    return res.status(500).json({ error: "Server error" });
+  }
+});
 
 export default router;

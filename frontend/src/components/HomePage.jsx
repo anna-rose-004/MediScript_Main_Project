@@ -36,6 +36,7 @@ const handleLogin = async (e) => {
     // Navigate based on user role
     if (role.toLowerCase() === "doctor") navigate("/dashboard");
     else if (role.toLowerCase() === "admin") navigate("/admin-dashboard");
+    else if (role.toLowerCase() === "pharmacist") navigate("/pharmacy-dashboard");
     else navigate("/"); // fallback
   } catch (err) {
     console.error("Login error:", err);
