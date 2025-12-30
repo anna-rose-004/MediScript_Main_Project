@@ -20,7 +20,7 @@ export default function ConsultationCompletion() {
   }
 
   const [editableSummary, setEditableSummary] = useState(summary || "");
-  const [diagnosis, setDiagnosis] = useState("");
+  const [showSuccess, setShowSuccess] = useState(false);
   const [saving, setSaving] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
 
@@ -206,90 +206,86 @@ export default function ConsultationCompletion() {
     }
   };
 
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b shadow-md p-4 flex justify-between items-center">
-        <button
-          onClick={() => navigate("/dashboard")}
-          className="text-blue-600 flex items-center gap-2 hover:text-blue-800 transition"
-        >
-          <ArrowLeft size={18} /> Back
-        </button>
-        <h1 className="text-2xl font-bold text-gray-800">Complete Consultation</h1>
+    <div className="min-h-screen bg-white">
+
+      <header className="bg-white shadow border-b">
+        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+          <button onClick={() => navigate('/dashboard')} className="flex items-center space-x-2 text-blue-600">
+            <ArrowLeft className="w-5 h-5" />
+            <span>Back</span>
+          </button>
+
+          <h1 className="text-2xl font-bold text-blue-900">Complete Consultation</h1>
+        </div>
       </header>
 
       {showSuccess && (
-        <div className="fixed top-20 right-4 bg-green-500 text-white px-4 py-2 rounded flex gap-2 shadow-lg animate-fade-in">
-          <CheckCircle /> Saved successfully
+        <div className="fixed top-20 right-4 bg-green-500 text-white px-6 py-4 rounded-lg shadow-lg flex items-center space-x-3">
+          <CheckCircle className="w-6 h-6" />
+          <span>Prescription saved successfully!</span>
         </div>
       )}
 
-      <main className="max-w-6xl mx-auto p-6 grid gap-6">
-        {/* Doctor & Patient Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white rounded-lg shadow p-6 border-l-4 border-blue-500 flex flex-col gap-2">
-            <div className="flex items-center gap-2 text-gray-700 font-semibold">
-              <User /> Doctor
-            </div>
-            <div className="text-gray-800 text-lg font-medium">{doctor?.name}</div>
-            <div className="text-gray-500">{doctor?.specialization}</div>
+      <main className="max-w-7xl mx-auto px-4 py-8">
+
+        {/* Doctor & Patient */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+
+          <div className="bg-white p-6 border rounded shadow">
+            <h2 className="font-bold flex items-center space-x-2 mb-2">
+              <User className="w-5 h-5" /> Doctor
+            </h2>
+            <p>ID: {doctor.user_id}</p>
+            <p>Name: {doctor.name}</p>
+            <p>Specialization: {doctor.specialization}</p>
+            <p>License: {doctor.license_number}</p>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6 border-l-4 border-green-500 flex flex-col gap-2">
-            <div className="flex items-center gap-2 text-gray-700 font-semibold">
-              <User /> Patient
-            </div>
-            <div className="text-gray-800 text-lg font-medium">{patient?.name}</div>
-            <div className="text-gray-500">{patient?.blood_group}</div>
+          <div className="bg-white p-6 border rounded shadow">
+            <h2 className="font-bold flex items-center space-x-2 mb-2">
+              <User className="w-5 h-5" /> Patient
+            </h2>
+            <p>ID: {patient.patient_id}</p>
+            <p>Name: {patient.name}</p>
+            <p>Consultation #: {convo_number}</p>
+            <p>Blood Group: {patient.blood_group}</p>
+            <p>Allergies: {patient.allergies?.join(", ") || "None"}</p>
           </div>
         </div>
 
-        {/* Summary Card */}
-          {editableSummary && (
-            <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-purple-500 relative">
-              <div className="flex justify-between items-center mb-4">
-                <div className="flex items-center gap-2 text-gray-700 font-semibold text-lg">
-                  <FileText size={20} /> Consultation Summary
-                </div>
-                {/* Copy button */}
-                <button
-                  type="button"
-                  onClick={() => navigator.clipboard.writeText(editableSummary)}
-                  className="text-purple-600 hover:text-purple-800 transition"
-                  title="Copy summary"
-                >
-                  Copy
-                </button>
-              </div>
+        {/* Transcript */}
+        {editableSummary && (
+        <div className="bg-green-50 p-6 border rounded mb-6">
+          <h2 className="font-bold flex items-center space-x-2 mb-2">
+            <FileText className="w-5 h-5" /> AI Summarisation (CRT)
+          </h2>
 
-              <textarea
-                className="w-full border border-gray-200 rounded-lg p-4 focus:ring-2 focus:ring-purple-400 focus:outline-none text-gray-800 placeholder-gray-400 resize-none min-h-[120px]"
-                rows={6}
-                value={editableSummary}
-                onChange={(e) => setEditableSummary(e.target.value)}
-                placeholder="AI-generated summary will appear here..."
-              />
-
-              {/* Optional: character count */}
-              <div className="text-right text-gray-400 text-sm mt-1">
-                {editableSummary.length} characters
-              </div>
-            </div>
-          )}
+          <textarea
+            className="w-full p-3 border rounded"
+            rows={10}
+            value={editableSummary}
+            onChange={(e) => setEditableSummary(e.target.value)}
+          />
+        </div>
+      )}
 
 
-        {/* Consultation Form */}
-        <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-6 flex flex-col gap-6">
-          <div>
-            <label className="block font-semibold text-gray-700 mb-2">Diagnosis</label>
+        {/* Form */}
+        <form onSubmit={handleSubmit}>
+          <div className="bg-white p-6 border rounded mb-6">
+
+            <h2 className="font-bold flex items-center space-x-2 mb-2">
+              Diagnosis
+            </h2>
+
             <textarea
+              className="w-full p-2 border rounded"
               required
-              placeholder="Enter diagnosis"
-              className="w-full border rounded-md p-3 focus:ring-2 focus:ring-blue-400 focus:outline-none"
               rows={4}
-              value={diagnosis}
-              onChange={(e) => setDiagnosis(e.target.value)}
+              value={formData.diagnosis}
+              onChange={(e) => setFormData({ ...formData, diagnosis: e.target.value })}
             />
           </div>
 
@@ -515,13 +511,13 @@ export default function ConsultationCompletion() {
               className="px-6 py-2 bg-gray-200 rounded">
               Cancel
             </button>
-            <button
-              type="submit"
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-            >
-              {saving ? "Saving..." : "Save Consultation"}
+
+            <button type="submit"
+              className="px-6 py-2 bg-blue-600 text-white rounded">
+              {saving ? "Saving..." : "Save Prescription"}
             </button>
           </div>
+
         </form>
           {/* Prescription Preview */}
           {showPreview && (
@@ -548,6 +544,7 @@ export default function ConsultationCompletion() {
             </div>
           )}
       </main>
+
     </div>
   );
 }
