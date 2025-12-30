@@ -1,6 +1,8 @@
 import express from "express";
 import { supabase } from "../services/supabaseClient.js";
 import authMiddleware from "../middleware/authMiddleware.js";
+import { logAudit } from "../utils/auditLogger.js";
+import { AUDIT_ACTIONS } from "../constants/auditActions.js";
 
 const router = express.Router();
 
@@ -37,6 +39,16 @@ router.get("/:id", authMiddleware, async (req, res) => {
 
     if (error || !data)
       return res.status(404).json({ error: "Patient not found" });
+    console.log("AUDIT USER:", req.user);
+
+    await logAudit({
+    user: req.user,
+    action: AUDIT_ACTIONS.VIEW_PATIENT,
+    details: {
+      patient_id: id,
+    },
+    ip: req.ip,
+  });
 
     return res.json({ patient: data });
   } catch (err) {

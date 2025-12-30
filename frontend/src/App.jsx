@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import AdminLogin from './components/AdminLogin.jsx';
+import Dashboard from './components/Dashboard';
 import ManageDoctors from './components/ManageDoctors.jsx';
 import ManagePatients from './components/ManagePatients.jsx';
 import AdminViewDoctor from './components/AdminViewDoctor.jsx';
@@ -10,7 +11,7 @@ import ForgotPwd from './components/ForgotPwd.jsx';
 import DoctorDashboard from './components/DoctorDashboard';
 import PatientDetails from './components/PatientDetails.jsx';
 
-import Dashboard from './components/Dashboard';
+import PharmacyDashboard from './components/PharmacyDashboard.jsx';
 
 import ListeningPage from './components/ListeningPage';
 import ConsultationCompletion from './components/ConsultationCompletion';
@@ -27,6 +28,8 @@ export default function App() {
         <Route path="/add-doctor" element={<AddDoctor />} />
         <Route path="/manage-patients" element={<ManagePatients />} />
         <Route path="/forgot-pwd" element={<ForgotPwd />} />
+
+        <Route path="/pharmacy-dashboard" element={<PharmacyDashboard />} />
         
         <Route path="/dashboard" element={<DoctorDashboard />} />
         <Route path="/patient/:patientId" element={<PatientDetails />} />

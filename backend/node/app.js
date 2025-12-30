@@ -25,6 +25,7 @@ app.options("*", cors());
 app.use(express.json());
 
 app.use("/auth", authRoutes);
+app.use("/audit", auditRoutes);
 
 //app.use(authMiddleware);
 app.use("/doctors", doctorRoutes);
